@@ -2,7 +2,7 @@
 
 This is a simple Super Mario game written in the MoonBit programming language.
 
-To play the game, visit the [GitHub Pages](https://moonbitlang.github.io/mario-moonbit/) of this repository.
+To play the game, visit the [GitHub Pages](https://rn7s2.github.io/mario-moonbit/) of this repository.
 
 You can use WASD and arrow keys to control two players, and the space key to restart the game.
 
