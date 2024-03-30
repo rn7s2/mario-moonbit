@@ -49,12 +49,17 @@ fn calc_fps(t0 : Double, t1 : Double) -> Double {
 }
 
 // (* Adds [i] to the score in [state] *)
-fn update_score(state : St, i : Int) {
+fn update_score(state : St, i : Int) -> Unit {
   state.score = state.score + i
 }
 
-fn player_attack_enemy(o1 : Object, typ : Enemy, s2 : Sprite, o2 : Object,
-        state : St) -> (Option[Collidable], Option[Collidable]) {
+fn player_attack_enemy(
+  o1 : Object,
+  typ : Enemy,
+  s2 : Sprite,
+  o2 : Object,
+  state : St
+) -> (Option[Collidable], Option[Collidable]) {
   o1.invuln = 10
   o1.jumping = false
   o1.grounded = true
@@ -84,8 +89,12 @@ fn player_attack_enemy(o1 : Object, typ : Enemy, s2 : Sprite, o2 : Object,
 }
 
 // (*enemy_attack_player is used when an enemy kills a player.*)
-fn enemy_attack_player(o1 : Object, t2 : Enemy, s2 : Sprite, o2 : Object) ->
-     (Option[Collidable], Option[Collidable]) {
+fn enemy_attack_player(
+  o1 : Object,
+  t2 : Enemy,
+  s2 : Sprite,
+  o2 : Object
+) -> (Option[Collidable], Option[Collidable]) {
   match t2 {
     GKoopaShell | RKoopaShell => {
       let r2 = if o2.vel.x == 0.0 {
@@ -108,8 +117,15 @@ fn enemy_attack_player(o1 : Object, t2 : Enemy, s2 : Sprite, o2 : Object) ->
 // (*In the case that two enemies collide, they are to reverse directions. However,
 // *in the case that one or more of the two enemies is a koopa shell, then
 // *the koopa shell kills the other enemy. *)
-fn col_enemy_enemy(t1 : Enemy, s1 : Sprite, o1 : Object, t2 : Enemy, s2 : Sprite,
-        o2 : Object, dir : Dir2d) -> (Option[Collidable], Option[Collidable]) {
+fn col_enemy_enemy(
+  t1 : Enemy,
+  s1 : Sprite,
+  o1 : Object,
+  t2 : Enemy,
+  s2 : Sprite,
+  o2 : Object,
+  dir : Dir2d
+) -> (Option[Collidable], Option[Collidable]) {
   match (t1, t2) {
     (GKoopaShell, GKoopaShell) | (GKoopaShell, RKoopaShell) => {
       dec_health(o1)
@@ -121,34 +137,40 @@ fn col_enemy_enemy(t1 : Enemy, s1 : Sprite, o1 : Object, t2 : Enemy, s2 : Sprite
       dec_health(o2)
       (None, None)
     }
-    (RKoopaShell, _) | (GKoopaShell, _) => if o1.vel.x == 0.0 {
-      rev_dir(o2, t2, s2)
-      (None, None)
-    } else {
-      dec_health(o2)
-      (None, None)
-    }
-    (_, RKoopaShell) | (_, GKoopaShell) => if o2.vel.x == 0.0 {
-      rev_dir(o1, t1, s1)
-      (None, None)
-    } else {
-      dec_health(o1)
-      (None, None)
-    }
-    _ => match dir {
-      West | East => {
-        rev_dir(o1, t1, s1)
+    (RKoopaShell, _) | (GKoopaShell, _) =>
+      if o1.vel.x == 0.0 {
         rev_dir(o2, t2, s2)
         (None, None)
+      } else {
+        dec_health(o2)
+        (None, None)
       }
-      _ => (None, None)
-    }
+    (_, RKoopaShell) | (_, GKoopaShell) =>
+      if o2.vel.x == 0.0 {
+        rev_dir(o1, t1, s1)
+        (None, None)
+      } else {
+        dec_health(o1)
+        (None, None)
+      }
+    _ =>
+      match dir {
+        West | East => {
+          rev_dir(o1, t1, s1)
+          rev_dir(o2, t2, s2)
+          (None, None)
+        }
+        _ => (None, None)
+      }
   }
 }
 
 // (* Run the broad phase object filtering *)
-fn broad_phase(collid : Collidable, all_collids : List[Collidable], state : St) ->
-     List[Collidable] {
+fn broad_phase(
+  collid : Collidable,
+  all_collids : List[Collidable],
+  state : St
+) -> List[Collidable] {
   let obj = get_obj(collid)
   filter(
     all_collids,
@@ -164,10 +186,17 @@ fn broad_phase(collid : Collidable, all_collids : List[Collidable], state : St) 
 // (*narrow_phase of collision is used in order to continuously repeat through
 // *each of the collidable objects to constantly check if collisions are
 // *occurring.*)
-fn narrow_phase(c : Collidable, cs : List[Collidable], state : St) ->
-     List[Collidable] {
-  fn narrow_helper(c : Collidable, cs : List[Collidable], state : St,
-          acc : List[Collidable]) -> List[Collidable] {
+fn narrow_phase(
+  c : Collidable,
+  cs : List[Collidable],
+  state : St
+) -> List[Collidable] {
+  fn narrow_helper(
+    c : Collidable,
+    cs : List[Collidable],
+    state : St,
+    acc : List[Collidable]
+  ) -> List[Collidable] {
     match cs {
       Nil => acc
       Cons(h, t) => {
@@ -175,11 +204,12 @@ fn narrow_phase(c : Collidable, cs : List[Collidable], state : St) ->
         let new_objs = if c != h {
           match check_collision(c, h) {
             None => (Option::None, Option::None)
-            Some(dir) => if get_obj(h).id != c_obj.id {
-              process_collision(dir, c, h, state)
-            } else {
-              (None, None)
-            }
+            Some(dir) =>
+              if get_obj(h).id != c_obj.id {
+                process_collision(dir, c, h, state)
+              } else {
+                (None, None)
+              }
           }
         } else {
           (None, None)
@@ -209,8 +239,11 @@ fn narrow_phase(c : Collidable, cs : List[Collidable], state : St) ->
 // * This method returns a list of objects that are created, which should be
 // * added to the list of collidables for the next iteration.
 // * *)
-fn check_collisions(collid : Collidable, all_collids : List[Collidable],
-        state : St) -> List[Collidable] {
+fn check_collisions(
+  collid : Collidable,
+  all_collids : List[Collidable],
+  state : St
+) -> List[Collidable] {
   match collid {
     Block(_, _, _) => Nil
     _ => {
@@ -227,15 +260,14 @@ fn check_bbox_enabled() -> Bool {
 
 // (* update_collidable is the primary update method for collidable objects,
 // * checking the collision, updating the object, and drawing to the canvas.*)
-fn update_collidable(state : St, collid : Collidable,
-        all_collids : List[Collidable]) -> List[Collidable] {
+fn update_collidable(
+  state : St,
+  collid : Collidable,
+  all_collids : List[Collidable]
+) -> List[Collidable] {
   let obj = get_obj(collid)
   let spr = get_sprite(collid)
-  obj.invuln = if obj.invuln > 0 {
-    obj.invuln - 1
-  } else {
-    0
-  }
+  obj.invuln = if obj.invuln > 0 { obj.invuln - 1 } else { 0 }
   // (* Prevent position from being updated outside of viewport *)
   let viewport_filter = in_viewport(state.vpt, obj.pos) || is_player(collid) || out_of_viewport_below(
       state.vpt,
@@ -299,15 +331,18 @@ fn translate_keys() -> List[Control] {
 // * as a wrapper method. This method is necessary to differentiate between
 // * the player collidable and the remaining collidables, as special operations
 // * such as viewport centering only occur with the player.*)
-fn run_update_collid(state : St, collid : Collidable,
-        all_collids : List[Collidable]) -> Collidable {
+fn run_update_collid(
+  state : St,
+  collid : Collidable,
+  all_collids : List[Collidable]
+) -> Collidable {
   match collid {
     Player(_, s, o) as p => {
       let keys = translate_keys()
       o.crouch = false
       let player = match update_player(o, keys) {
         None => p
-        Some(new_typ, new_spr) => {
+        Some((new_typ, new_spr)) => {
           normalize_pos(o.pos, s.params, new_spr.params)
           Player(new_typ, new_spr, o)
         }
@@ -325,11 +360,7 @@ fn run_update_collid(state : St, collid : Collidable,
           concat(collid_objs.value, evolved),
         )
       }
-      let new_parts = if obj.kill {
-        kill(collid)
-      } else {
-        List::Nil
-      }
+      let new_parts = if obj.kill { kill(collid) } else { List::Nil }
       particles.value = concat(particles.value, new_parts)
       collid
     }
@@ -337,7 +368,7 @@ fn run_update_collid(state : St, collid : Collidable,
 }
 
 // (* Primary update function to update and persist a particle *)
-fn run_update_particle(state : St, part : Particle) {
+fn run_update_particle(state : St, part : Particle) -> Unit {
   process(part)
   let x = part.pos.x - state.vpt.pos.x
   let y = part.pos.y - state.vpt.pos.y
@@ -349,8 +380,12 @@ fn run_update_particle(state : St, part : Particle) {
 
 let which : Ref[Bool] = Ref::make(true)
 
-fn update_helper(time : Double, state : St, objs : List[Collidable],
-        parts : List[Particle]) {
+fn update_helper(
+  time : Double,
+  state : St,
+  objs : List[Collidable],
+  parts : List[Particle]
+) -> Unit {
   if state.game_over == true {
     match first(players.value, fn(p) { get_obj(p).kill.not() }) {
       None => game_lose()
@@ -395,74 +430,74 @@ fn update_helper(time : Double, state : St, objs : List[Collidable],
   }
 }
 
-pub fn game_update(t : Double) {
+pub fn game_update(t : Double) -> Unit {
   update_helper(t, state, collid_objs.value, particles.value)
 }
 
-pub fn keydown_B() {
+pub fn keydown_B() -> Unit {
   pressed_keys.bbox = pressed_keys.bbox.lxor(1)
 }
 
-pub fn keydown_up() {
+pub fn keydown_up() -> Unit {
   pressed_keys.up = true
 }
 
-pub fn keydown_up2() {
+pub fn keydown_up2() -> Unit {
   pressed_keys.up2 = true
 }
 
-pub fn keydown_down() {
+pub fn keydown_down() -> Unit {
   pressed_keys.down = true
 }
 
-pub fn keydown_down2() {
+pub fn keydown_down2() -> Unit {
   pressed_keys.down2 = true
 }
 
-pub fn keydown_left() {
+pub fn keydown_left() -> Unit {
   pressed_keys.left = true
 }
 
-pub fn keydown_left2() {
+pub fn keydown_left2() -> Unit {
   pressed_keys.left2 = true
 }
 
-pub fn keydown_right() {
+pub fn keydown_right() -> Unit {
   pressed_keys.right = true
 }
 
-pub fn keydown_right2() {
+pub fn keydown_right2() -> Unit {
   pressed_keys.right2 = true
 }
 
-pub fn keyup_up() {
+pub fn keyup_up() -> Unit {
   pressed_keys.up = false
 }
 
-pub fn keyup_up2() {
+pub fn keyup_up2() -> Unit {
   pressed_keys.up2 = false
 }
 
-pub fn keyup_down() {
+pub fn keyup_down() -> Unit {
   pressed_keys.down = false
 }
 
-pub fn keyup_down2() {
+pub fn keyup_down2() -> Unit {
   pressed_keys.down2 = false
 }
 
-pub fn keyup_left() {
+pub fn keyup_left() -> Unit {
   pressed_keys.left = false
 }
 
-pub fn keyup_left2() {
+pub fn keyup_left2() -> Unit {
   pressed_keys.left2 = false
 }
 
-pub fn keyup_right() {
+pub fn keyup_right() -> Unit {
   pressed_keys.right = false
 }
 
-pub fn keyup_right2() {
+pub fn keyup_right2() -> Unit {
   pressed_keys.right2 = false
 }

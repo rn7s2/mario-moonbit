@@ -5,9 +5,7 @@ let level_height : Double = 256.0
 let player_count = 2
 
 let temp : (List[Collidable], List[Collidable]) = generate(
-  player_count,
-  level_width,
-  level_height,
+  player_count, level_width, level_height,
 )
 
 let players : Ref[List[Collidable]] = Ref::make(temp.0)
@@ -34,4 +32,8 @@ let state : St = {
 
 fn init {
   update_helper(0.0, state, objs, List::Nil)
+}
+
+fn main {
+
 }

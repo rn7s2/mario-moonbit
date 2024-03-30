@@ -33,11 +33,7 @@ fn Ref::make[T](value : T) -> Ref[T] {
 fn filter[T](this : List[T], f : (T) -> Bool) -> List[T] {
   match this {
     Nil => Nil
-    Cons(x, xs) => if f(x) {
-      Cons(x, filter(xs, f))
-    } else {
-      filter(xs, f)
-    }
+    Cons(x, xs) => if f(x) { Cons(x, filter(xs, f)) } else { filter(xs, f) }
   }
 }
 
@@ -71,25 +67,18 @@ fn concat[X](this : List[X], ys : List[X]) -> List[X] {
 fn first[X](this : List[X], predicate : (X) -> Bool) -> Option[X] {
   match this {
     Nil => None
-    Cons(x, xs) => if predicate(x) {
-      Some(x)
-    } else {
-      first(xs, predicate)
-    }
+    Cons(x, xs) => if predicate(x) { Some(x) } else { first(xs, predicate) }
   }
 }
 
 fn last[X](this : List[X], predicate : (X) -> Bool) -> Option[X] {
   match this {
     Nil => None
-    Cons(x, xs) => match last(xs, predicate) {
-      Some(_) as ans => ans
-      None => if predicate(x) {
-        Some(x)
-      } else {
-        None
+    Cons(x, xs) =>
+      match last(xs, predicate) {
+        Some(_) as ans => ans
+        None => if predicate(x) { Some(x) } else { None }
       }
-    }
   }
 }
 
@@ -100,11 +89,7 @@ fn at[X](this : List[X], index : Int) -> X {
   fn at_helper(l : List[X], index : Int) -> X {
     match l {
       Nil => abort("invalid index")
-      Cons(x, xs) => if index == 0 {
-        x
-      } else {
-        at_helper(xs, index - 1)
-      }
+      Cons(x, xs) => if index == 0 { x } else { at_helper(xs, index - 1) }
     }
   }
 
